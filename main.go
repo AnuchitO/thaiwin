@@ -30,13 +30,13 @@ func main() {
 }
 
 type Check struct {
-	ID      int64
-	PlaceID int64
+	ID      int64 `json:"id"`
+	PlaceID int64 `json:"place_id"`
 }
 
 type Location struct {
-	Lat  float64
-	Long float64
+	Lat  float64 `json:"lat"`
+	Long float64 `json:"long"`
 }
 
 // Recently returns currently visited
