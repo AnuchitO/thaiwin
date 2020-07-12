@@ -50,7 +50,7 @@ type CheckIn struct {
 
 type InsertCheckIn func(id, placeID int64) error
 
-var insertCheckIn = func(id, placeID int64) error {
+func insertCheckIn(id, placeID int64) error {
 	db, err := sql.Open("sqlite3", "thaichana.db")
 	if err != nil {
 		return err
