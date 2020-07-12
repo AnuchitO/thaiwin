@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"thaichana/logger"
 	"time"
 
+	"github.com/anuchito/thaiwin/logger"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"

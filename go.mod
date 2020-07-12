@@ -1,4 +1,4 @@
-module thaichana
+module github.com/anuchito/thaiwin
 
 go 1.14
 
