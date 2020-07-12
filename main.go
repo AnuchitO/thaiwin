@@ -5,16 +5,25 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/spf13/viper"
 )
+
+func init() {
+	viper.SetDefault("port", "8000")
+	viper.SetDefault("db.conn", "thaichana.db")
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+}
 
 func main() {
 	r := mux.NewRouter()
 
-	db, err := sql.Open("sqlite3", "thaichana.db")
+	db, err := sql.Open("sqlite3", viper.GetString("db.conn"))
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -27,7 +36,7 @@ func main() {
 
 	srv := &http.Server{
 		Handler:      r,
-		Addr:         "127.0.0.1:8000",
+		Addr:         "127.0.0.1:" + viper.GetString("port"),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
