@@ -15,7 +15,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/recently", Recently).Methods(http.MethodPost)
-	r.Handle("/checkin", &CheckIn{InsertCheckIn: insertCheckIn}).Methods(http.MethodPost)
+	r.HandleFunc("/checkin", CheckIn(insertCheckIn)).Methods(http.MethodPost)
 	r.HandleFunc("/checkout", CheckOut).Methods(http.MethodPost)
 
 	srv := &http.Server{
@@ -44,11 +44,7 @@ func Recently(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello"))
 }
 
-type CheckIn struct {
-	InsertCheckIn InsertCheckIn
-}
-
-type InsertCheckIn func(id, placeID int64) error
+type InsertCheckInFunc func(id, placeID int64) error
 
 func insertCheckIn(id, placeID int64) error {
 	db, err := sql.Open("sqlite3", "thaichana.db")
@@ -62,24 +58,26 @@ func insertCheckIn(id, placeID int64) error {
 }
 
 // CheckIn check-in to place, returns density (ok, too much)
-func (c *CheckIn) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	chk := Check{}
-	if err := json.NewDecoder(r.Body).Decode(&chk); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(err)
-		return
-	}
-	defer r.Body.Close()
+func CheckIn(InsertCheckIn InsertCheckInFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		chk := Check{}
+		if err := json.NewDecoder(r.Body).Decode(&chk); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(err)
+			return
+		}
+		defer r.Body.Close()
 
-	err := c.InsertCheckIn(chk.ID, chk.PlaceID)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(err)
-		return
-	}
+		err := InsertCheckIn(chk.ID, chk.PlaceID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(err)
+			return
+		}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{ "density": "ok" }`))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{ "density": "ok" }`))
+	}
 }
 
 // CheckOut check-out from place

@@ -14,11 +14,11 @@ func TestCheckInHandler(t *testing.T) {
 	req := httptest.NewRequest("POST", "/checkin", payload)
 	w := httptest.NewRecorder()
 
-	chk := CheckIn{InsertCheckIn: func(id, placeID int64) error {
+	handler := CheckIn(func(id, placeID int64) error {
 		return nil
-	}}
+	})
 
-	chk.ServeHTTP(w, req)
+	handler(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Error("not ok")
