@@ -56,3 +56,7 @@ type CacheVisitors struct {
 - routing using gorilla-mux
 - graceful shutting down
 - distributed tracing using telemetry
+
+
+## logging
+`x-forwarded-for` in header please log it.

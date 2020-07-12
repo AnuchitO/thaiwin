@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -21,6 +23,12 @@ func init() {
 }
 
 func main() {
+	logger, _ := zap.NewDevelopment()
+	defer logger.Sync()
+	hostname, _ := os.Hostname()
+	logger = logger.With(zap.String("hostname", hostname))
+	zap.ReplaceGlobals(logger)
+
 	r := mux.NewRouter()
 
 	db, err := sql.Open("sqlite3", viper.GetString("db.conn"))
@@ -34,14 +42,15 @@ func main() {
 	r.HandleFunc("/checkin", CheckIn(InFunc(NewInsertCheckIn(db)))).Methods(http.MethodPost)
 	r.HandleFunc("/checkout", CheckOut).Methods(http.MethodPost)
 
+	port := viper.GetString("port")
 	srv := &http.Server{
 		Handler:      r,
-		Addr:         "127.0.0.1:" + viper.GetString("port"),
+		Addr:         "127.0.0.1:" + port,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Println("starting...")
+	zap.L().Info("starting...", zap.String("port", port))
 	log.Fatal(srv.ListenAndServe())
 }
 
