@@ -61,7 +61,9 @@ type CacheVisitors struct {
 ## logging
 `traceparent` in header please log it.
 
-
+## seal middleware
+payload `ewogICAgImlkIjogMTIzNCwKICAgICJwbGFjZV9pZCI6IDQzMjEKfQ==` 
+expect response body `eyAiZGVuc2l0eSI6ICJvayIgfQ==`
 
 ## note 
 - mux.MiddlewareFunc กับ  http.Handler มัน compatability?

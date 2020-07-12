@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -38,6 +41,7 @@ func main() {
 	defer db.Close()
 	r := mux.NewRouter()
 	r.Use(logger.LoggerMiddleware(l))
+	r.Use(SealMiddleware())
 
 	r.HandleFunc("/recently", Recently).Methods(http.MethodPost)
 	r.HandleFunc("/checkin", CheckIn(InFunc(NewInsertCheckIn(db)))).Methods(http.MethodPost)
@@ -114,4 +118,39 @@ func CheckIn(check Iner) http.HandlerFunc {
 // CheckOut check-out from place
 func CheckOut(w http.ResponseWriter, r *http.Request) {
 
+}
+
+func SealMiddleware() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			b, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			data, err := base64.StdEncoding.DecodeString(string(b))
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			buff := bytes.NewBuffer(data)
+
+			r.Body = ioutil.NopCloser(buff)
+
+			next.ServeHTTP(&EncodeWriter{w}, r)
+		})
+	}
+}
+
+type EncodeWriter struct {
+	http.ResponseWriter
+}
+
+func (w *EncodeWriter) Write(b []byte) (int, error) {
+	body := base64.StdEncoding.EncodeToString(b)
+	return w.ResponseWriter.Write([]byte(body))
 }

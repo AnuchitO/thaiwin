@@ -2,7 +2,10 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,4 +28,25 @@ func TestCheckInHandler(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Error("not ok")
 	}
+}
+
+func TestSealMiddleware(t *testing.T) {
+	payload := bytes.NewBufferString("ewogICAgImlkIjogMTIzNCwKICAgICJwbGFjZV9pZCI6IDQzMjEKfQ==")
+
+	req := httptest.NewRequest("POST", "/checkin", payload)
+	w := httptest.NewRecorder()
+
+	handler := SealMiddleware()
+
+	handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		w.Write(b)
+	})).ServeHTTP(w, req)
+
+	body, _ := ioutil.ReadAll(w.Result().Body)
+	fmt.Println(string(body))
 }
