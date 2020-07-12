@@ -15,7 +15,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/recently", Recently).Methods(http.MethodPost)
-	r.HandleFunc("/checkin", CheckIn(insertCheckIn)).Methods(http.MethodPost)
+	r.HandleFunc("/checkin", CheckIn(insertCheckIn{})).Methods(http.MethodPost)
 	r.HandleFunc("/checkout", CheckOut).Methods(http.MethodPost)
 
 	srv := &http.Server{
@@ -48,7 +48,10 @@ type Iner interface {
 	In(id, placeID int64) error
 }
 
-func insertCheckIn(id, placeID int64) error {
+type insertCheckIn struct {
+}
+
+func (insertCheckIn) In(id, placeID int64) error {
 	db, err := sql.Open("sqlite3", "thaichana.db")
 	if err != nil {
 		return err
