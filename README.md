@@ -60,3 +60,8 @@ type CacheVisitors struct {
 
 ## logging
 `x-forwarded-for` in header please log it.
+
+
+
+## note 
+- mux.MiddlewareFunc กับ  http.Handler มัน compatability?
