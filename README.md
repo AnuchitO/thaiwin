@@ -59,7 +59,7 @@ type CacheVisitors struct {
 
 
 ## logging
-`x-forwarded-for` in header please log it.
+`traceparent` in header please log it.
 
 
 

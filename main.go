@@ -1,13 +1,13 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"thaichana/logger"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -24,11 +24,11 @@ func init() {
 }
 
 func main() {
-	logger, _ := zap.NewDevelopment()
-	defer logger.Sync()
+	l, _ := zap.NewDevelopment()
+	defer l.Sync()
 	hostname, _ := os.Hostname()
-	logger = logger.With(zap.String("hostname", hostname))
-	zap.ReplaceGlobals(logger)
+	l = l.With(zap.String("hostname", hostname))
+	zap.ReplaceGlobals(l)
 
 	db, err := sql.Open("sqlite3", viper.GetString("db.conn"))
 	if err != nil {
@@ -37,7 +37,7 @@ func main() {
 	}
 	defer db.Close()
 	r := mux.NewRouter()
-	r.Use(LoggerMiddleware(logger))
+	r.Use(logger.LoggerMiddleware(l))
 
 	r.HandleFunc("/recently", Recently).Methods(http.MethodPost)
 	r.HandleFunc("/checkin", CheckIn(InFunc(NewInsertCheckIn(db)))).Methods(http.MethodPost)
@@ -90,7 +90,7 @@ func NewInsertCheckIn(db *sql.DB) func(id, placeID int64) error {
 // CheckIn check-in to place, returns density (ok, too much)
 func CheckIn(check Iner) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		r.Context().Value("logger").(*zap.Logger).Info("check-in")
+		logger.L(r.Context()).Info("check-in")
 		chk := Check{}
 		if err := json.NewDecoder(r.Body).Decode(&chk); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -114,13 +114,4 @@ func CheckIn(check Iner) http.HandlerFunc {
 // CheckOut check-out from place
 func CheckOut(w http.ResponseWriter, r *http.Request) {
 
-}
-
-func LoggerMiddleware(logger *zap.Logger) mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			l := logger.With(zap.String("middleware", "some data in middleware"))
-			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "logger", l)))
-		})
-	}
 }
