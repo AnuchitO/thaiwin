@@ -14,8 +14,15 @@ import (
 func main() {
 	r := mux.NewRouter()
 
+	db, err := sql.Open("sqlite3", "thaichana.db")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer db.Close()
+
 	r.HandleFunc("/recently", Recently).Methods(http.MethodPost)
-	r.HandleFunc("/checkin", CheckIn(InFunc(insertCheckIn))).Methods(http.MethodPost)
+	r.HandleFunc("/checkin", CheckIn(InFunc(NewInsertCheckIn(db)))).Methods(http.MethodPost)
 	r.HandleFunc("/checkout", CheckOut).Methods(http.MethodPost)
 
 	srv := &http.Server{
@@ -54,15 +61,11 @@ type Iner interface {
 	In(id, placeID int64) error
 }
 
-func insertCheckIn(id, placeID int64) error {
-	db, err := sql.Open("sqlite3", "thaichana.db")
-	if err != nil {
+func NewInsertCheckIn(db *sql.DB) func(id, placeID int64) error {
+	return func(id, placeID int64) error {
+		_, err := db.Exec("INSERT INTO visits VALUES(?, ?);", id, placeID)
 		return err
 	}
-	defer db.Close()
-
-	_, err = db.Exec("INSERT INTO visits VALUES(?, ?);", id, placeID)
-	return err
 }
 
 // CheckIn check-in to place, returns density (ok, too much)
