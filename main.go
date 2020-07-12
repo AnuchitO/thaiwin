@@ -15,7 +15,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/recently", Recently).Methods(http.MethodPost)
-	r.HandleFunc("/checkin", CheckIn).Methods(http.MethodPost)
+	r.Handle("/checkin", &CheckIn{InsertCheckIn: insertCheckIn}).Methods(http.MethodPost)
 	r.HandleFunc("/checkout", CheckOut).Methods(http.MethodPost)
 
 	srv := &http.Server{
@@ -44,7 +44,13 @@ func Recently(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello"))
 }
 
-var InsertCheckIn = func(id, placeID int64) error {
+type CheckIn struct {
+	InsertCheckIn InsertCheckIn
+}
+
+type InsertCheckIn func(id, placeID int64) error
+
+var insertCheckIn = func(id, placeID int64) error {
 	db, err := sql.Open("sqlite3", "thaichana.db")
 	if err != nil {
 		return err
@@ -56,7 +62,7 @@ var InsertCheckIn = func(id, placeID int64) error {
 }
 
 // CheckIn check-in to place, returns density (ok, too much)
-func CheckIn(w http.ResponseWriter, r *http.Request) {
+func (c *CheckIn) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	chk := Check{}
 	if err := json.NewDecoder(r.Body).Decode(&chk); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -65,7 +71,7 @@ func CheckIn(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	err := InsertCheckIn(chk.ID, chk.PlaceID)
+	err := c.InsertCheckIn(chk.ID, chk.PlaceID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(err)
