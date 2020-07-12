@@ -9,7 +9,7 @@
     check-in to any places
         input {
             "id": 1234,
-            "place_id": "4321"
+            "place_id": 4321
         }
         output {
             "density": "ok"
@@ -19,7 +19,7 @@
             "id": 1234,
             "place_id": "4321"
         }
-        output {}        
+        output {}
 ~~~
 
 3 tables in db
