@@ -154,3 +154,79 @@ func (w *EncodeWriter) Write(b []byte) (int, error) {
 	body := base64.StdEncoding.EncodeToString(b)
 	return w.ResponseWriter.Write([]byte(body))
 }
+
+/*
+type Interface interface {
+	Insert(collection string, doc interface{}) error
+}
+
+type Connection struct {
+		*mgo.Session
+		db string
+}
+
+func (conn *Connection) Insert(collection string, doc interface{}) error {
+	session := conn.copySession()
+	defer session.Close()
+
+	c := session.DB(conn.db).C(collection)
+	return c.Insert(doc)
+}
+
+type Logger interface {
+	StampRequestDateTime()
+	StampResponseDateTime()
+}
+
+type LogDatabase struct {
+	Interface
+	Logger Logger
+}
+
+func (ld *LogDatabase) Insert(collection string, doc interface{}) error {
+	ld.Logger.StampRequestDateTime()
+	err := ld.Interface.Insert(collection, doc)
+	ld.Logger.StampResponseDateTime()
+	ld.Log("Insert", collection, 1, err)
+	return err
+}
+
+// Factory
+func Connect() (Interface, error) {
+	if logDatabase != nil {
+		return logDatabase, nil
+	}
+	conn, err := connect()
+	if err != nil {
+		return nil, err
+	}
+	if !conf.GetBool("mongodb.log_enable") {
+		return conn, nil
+	}
+	dbLog := newLog(conf.Get("mongodb.log_file"), nil)
+	logDatabase = &LogDatabase{Interface: conn, Logger: dbLog}
+	return logDatabase, nil
+}
+
+func Close() {
+	if connection != nil {
+		connection.Close()
+	}
+}
+
+func connect() (*Connection, error) {
+	if connection != nil {
+		return connection, nil
+	}
+	session, err := mgo.Dial(conf.Get("mongodb.host"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	session.SetMode(mgo.Strong, true)
+	connection = &Connection{Session: session, db: conf.Get("mongodb.dbname")}
+	return connection, nil
+}
+
+*/
