@@ -1,4 +1,4 @@
-# ThaiChana API
+# Thaiwin API
 
 3 route paths
 
